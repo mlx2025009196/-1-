@@ -38,7 +38,7 @@ session.headers.update(HEADERS)
 
 # ================= 工具函数 =================
 def api_get(url):
-    """请求接口，失败重试3次，稳"""
+    """请求接口，失败自动重试3次"""
     for i in range(3):
         try:
             r = session.get(url, timeout=15)
@@ -74,14 +74,14 @@ def ip_of(comment):
 # ================= 第一层：话题博文 =================
 def crawl_posts():
     posts = []
-    seen_mid = set()                     # 去重：搜索翻页翻深了会绕回头，同一博文会再出现
+    seen_mid = set()                     # 去重：翻页时同一博文可能重复出现
     for page in range(1, POST_PAGES + 1):
         url = ("https://m.weibo.cn/api/container/getIndex"
                "?containerid=100103type%3D61%26q%3D" + quote(TOPIC) +
                "%26t%3D0&page=" + str(page))
         d = api_get(url)
         if not d:
-            print(f"第 {page} 页博文没拿到，跳过")
+            print(f"第 {page} 页博文获取失败，跳过")
             continue
 
         cards = d.get("data", {}).get("cards", [])
@@ -215,7 +215,7 @@ if __name__ == "__main__":
         all_comments.extend(cmts)
         time.sleep(random.uniform(1.0, 2.0))
 
-        # 【第三层】对有二级评论的一级评论，挖二级评论
+        # 【第三层】对有二级评论的一级评论，爬取二级评论
         for c in cmts:
             if c["二级评论数"] > 0:
                 subs = crawl_sub_comments(c["博文id"], c["评论id"],
@@ -225,7 +225,7 @@ if __name__ == "__main__":
 
     print(f"\n博文 {len(posts)} 条，一级评论 {len(all_comments)} 条，二级评论 {len(all_subs)} 条")
 
-    # 分表存储（三个CSV，明天导入MySQL也是这三张表）
+    # 分表存储（三个CSV对应MySQL的三张表）
     pd.DataFrame(posts).to_csv("weibo_posts.csv", index=False, encoding="utf-8-sig")
     pd.DataFrame(all_comments).to_csv("weibo_comments.csv", index=False, encoding="utf-8-sig")
     pd.DataFrame(all_subs).to_csv("weibo_sub_comments.csv", index=False, encoding="utf-8-sig")

@@ -18,7 +18,7 @@ HEADERS = {
 }
 
 CSV_FILE = "douban_top250_full.csv"
-MAX_NEW = 70               # 每次最多新爬 70 部，不碰限流红线
+MAX_NEW = 70               # 每次最多新爬 70 部
 WAIT_RANGE = (5.0, 9.0)     # 每页等 5~9 秒
 
 
@@ -65,19 +65,19 @@ def get_movie_links():
 
 
 def fetch_soup(driver, url, max_retry=3):
-    """请求页面：卡死等60秒重试，被限流等120秒重试，绝不崩溃"""
+    """请求详情页并解析，加载失败或页面异常时自动重试（最多3次）"""
     for attempt in range(1, max_retry + 1):
         try:
             driver.get(url)
         except Exception:
-            print(f"    页面卡住（第 {attempt} 次），等 60 秒重试...")
+            print(f"    加载失败（第 {attempt} 次），60 秒后重试...")
             time.sleep(60)
             continue
         time.sleep(random.uniform(*WAIT_RANGE))
         soup = BeautifulSoup(driver.page_source, "html.parser")
         if soup.find("span", property="v:itemreviewed") is not None:
             return soup
-        print(f"    没拿到正常页面（第 {attempt} 次），等 120 秒重试...")
+        print(f"    页面内容异常（第 {attempt} 次），120 秒后重试...")
         time.sleep(120)
     return None
 
@@ -165,14 +165,14 @@ if __name__ == "__main__":
             continue
 
         if new_count >= MAX_NEW:
-            print(f"\n本次已爬 {new_count} 部，主动收工（不碰限流红线）")
-            print("过 2~3 小时或明早再运行一次本脚本，会自动接着爬")
+            print(f"\n本次已爬 {new_count} 部，达到单次上限，停止运行")
+            print("过一段时间再运行一次本脚本，会自动从上次的位置继续")
             break
 
         print(f"[{rank}/250] 抓取中...（本次第 {new_count + 1} 部）")
         soup = fetch_soup(driver, url)
         if soup is None:
-            print("  !! 重试多次仍失败，先跳过")
+            print("  !! 多次重试仍失败，跳过该部")
             failed.append(rank)
             continue
 
@@ -196,6 +196,6 @@ if __name__ == "__main__":
     if failed:
         print("失败的排名:", failed)
     if len(results) < 250:
-        print(f"还剩 {250 - len(results)} 部，过 2~3 小时或明早再运行一次即可")
+        print(f"还剩 {250 - len(results)} 部，再次运行本脚本即可继续")
     else:
-        print("250 部全部完成！实战一数据到手")
+        print("250 部全部完成！")

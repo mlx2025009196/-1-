@@ -1,11 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-实战一（补充）：XPath 版豆瓣 Top250 爬虫
-与 douban_top250_full2.py（BeautifulSoup 版）形成对照：
-- 两种解析方式都使用了，满足作业"多种方式爬取"的要求
-- 本脚本用 lxml 的 XPath 解析 10 个列表页，拿到全部 250 部的
-  排名 / 片名 / 链接 / 评分 / 评价人数
-"""
+# XPath 版豆瓣 Top250 爬虫（与 BeautifulSoup 版互相验证）
 import time
 import requests
 import pandas as pd
