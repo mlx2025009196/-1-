@@ -1,0 +1,14 @@
+# 敏感信息，绝不上传
+weibo_cookie.txt
+*.txt
+
+# Office 临时锁文件
+~$*
+
+# Python 缓存
+__pycache__/
+*.pyc
+
+# 系统文件
+Thumbs.db
+desktop.ini
